@@ -26,7 +26,7 @@ export default {
   .tab
     display flex
     position relative
-    // background-color #fff
+    background-color $color-background
     line-height 44px
     height 44px
     .tab-item

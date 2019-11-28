@@ -3,7 +3,7 @@
     <swiper :options="swiperOption">
       <!-- slides -->
       <!-- <slot></slot> -->
-      <swiper-slide v-for="(item, index) in sliderList" :key=index>
+      <swiper-slide v-for="(item, index) in sliderList" :key="index">
         <a :href="item[linkUrl]">
           <img :src="item[picUrl]" class="swiper-img">
         </a>
