@@ -3,7 +3,7 @@
     <scroll ref="scroll" class="scroll" :data="discData">
       <div >
         <div class="slider-wrapper">
-          <slider :sliderList="sliderData.slider" picUrl="picUrl" linkUrl="linkUrl">
+          <slider :sliderList="sliderData">
           </slider>
         </div>
         <h1 class="disc-title">热门歌单推荐</h1>
@@ -39,6 +39,7 @@ import TransitionSlide from 'base/transition/transition-slide'
 import { getRecommend, getDiscList } from 'api/recommend'
 import { ERR_OK } from 'api/config'
 import { playlistMixin } from 'common/js/mixin'
+import { focusSlider } from 'common/js/recommend'
 import { mapMutations } from 'vuex'
 
 export default {
@@ -46,7 +47,7 @@ export default {
   name: 'Recommend',
   data () {
     return {
-      sliderData: {},
+      sliderData: [],
       discData: [],
       checkLoad: false
     }
@@ -62,9 +63,21 @@ export default {
     _getRecommend () {
       getRecommend().then((res) => {
         if (res.code === ERR_OK) {
-          this.sliderData = res.data
+          this.sliderData = this._normalizeSliderData(res.focus.data.content)
+          console.log(this.sliderData)
         }
       })
+    },
+    _normalizeSliderData (data) {
+      let ret = []
+      data.forEach ((item) => {
+        const info = new focusSlider({
+          url: item.pic_info.url,
+          mid: item.jump_info.url
+          })
+        ret.push(info)
+      })
+      return ret
     },
     _getDiscList () {
       getDiscList().then((res) => {

@@ -78,7 +78,7 @@
               <i @click="changeSong(true)" class="icon-next i-right"></i>
             </div>
             <div class="footer-icons">
-              <i class="icon-not-favorite i-right"></i>
+              <i @click="toggleLike" class="i-right" :class="likeCls" ></i>
             </div>
           </div>
         </div>
@@ -98,14 +98,16 @@
             <i :class="miniIcon" @click.stop="togglePlaying" class="miniIcon"></i>
           </process-circle>
         </div>
-        <div class="mini-right">
+        <div class="mini-right" @click.stop="showPlaylist">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <playlist ref="playlist"></playlist>
     <audio ref="audio"
+           id="music"
            :src='songUrl'
-           @canplay="ready"
+           @play="ready"
            @error="error"
            @timeupdate="updateTime"
            @ended="ended"
@@ -114,19 +116,22 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex'
+import { mapGetters, mapMutations, mapActions } from 'vuex'
 import { prefixStyle } from 'common/js/dom'
+import { playerMixin } from 'common/js/mixin'
 import { playMode } from 'common/js/config'
-import { setRandomList } from 'common/js/util'
 import ProcessBar from 'base/process-bar/process-bar'
 import ProcessCircle from 'base/process-circle/process-circle'
 import Scroll from 'base/scroll/scroll'
+import Playlist from '../playlist/playlist'
 import animations from 'create-keyframe-animation'
 import Lyric from 'lyric-parser'
 
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transitionDuration')
+
 export default {
+  mixins: [playerMixin],
   name: 'Player',
   data () {
     return {
@@ -143,15 +148,23 @@ export default {
   created () {
     this.touch = {}
   },
+  mounted () {
+    this.wakeAudio ()
+  },
   computed: {
+    likeCls () {
+      const list = this.favoriteList.slice()
+      const id = this.currentSong.id
+      let index = list.findIndex((item) => {
+        return item.id === id
+      })
+      return index > -1 ? 'icon-favorite' : 'icon-not-favorite'
+    },
     cdCls () {
       return this.playing ? 'play' : 'play pause'
     },
     playIcon () {
       return this.playing ? 'icon-pause' : 'icon-play'
-    },
-    modeIcon () {
-      return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
     },
     miniIcon () {
       return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
@@ -165,21 +178,34 @@ export default {
     ...mapGetters([
       'fullScreen',
       'playlist',
-      'sequenceList',
-      'currentSong',
-      'currentIndex',
       'playing',
-      'mode'
+      'favoriteList'
     ])
   },
   methods: {
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
-      setPlaying: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX',
-      setPlayMode: 'SET_PLAY_MODE',
-      setPlayList: 'SET_PLAYLIST'
+      setPlaying: 'SET_PLAYING_STATE'
     }),
+    ...mapActions([
+      'savePlayHistory',
+      'saveFavoriteList',
+      'deleteFavoriteList'
+    ]),
+    wakeAudio () {
+      document.addEventListener('DOMContentLoaded', () => {
+        if (!this.songUrl) {
+          return
+        }
+        this.$refs.audio.play()
+      })
+      document.addEventListener('touchstart', () => {
+        if (!this.songUrl) {
+          return
+        }
+        this.$refs.audio.play()
+      })
+    },
     enter (el, done) {
       const { x, y, scale } = this._getPosAndScale()
       let animation = {
@@ -266,6 +292,7 @@ export default {
       const len = this.playlist.length
       if (len === 1) {
         this.loop()
+        return
       } else {
         this.$refs.audio.currentTime = 0
         let newIndex = next ? this.currentIndex + 1 : this.currentIndex - 1
@@ -280,26 +307,12 @@ export default {
     },
     ready () {
       this.songReady = true
+      this.savePlayHistory(this.currentSong)
     },
     error (e) {
-      this.songReady = true
-    },
-    changeMode () {
-      const newMode = (this.mode + 1) % 3
-      this.setPlayMode(newMode)
-      let list = null
-      if (this.mode === playMode.random) {
-        list = setRandomList(this.sequenceList)
-        console.log(list)
-      } else {
-        list = this.sequenceList
+      if (this.songUrl) {
+        this.songReady = true
       }
-      const currentIndex = this.resetCurrentIndex(list)
-      this.setPlayList(list)
-      this.setCurrentIndex(currentIndex)
-    },
-    resetCurrentIndex (list) {
-      return list.findIndex(item => item.id === this.currentSong.id)
     },
     _getPosAndScale () {
       const before = {
@@ -330,14 +343,21 @@ export default {
       newSong.getUrl().then((url) => {
         this.songUrl = url
         setTimeout(() => {
+          this.$refs.audio.currentTime = 0
           this.$refs.audio.play()
         }, 1000)
       })
+
     },
     _getSongLyric (newSong) {
+      if (this.currentLyric) {
+        this.currentLyric.stop()
+        this.currentLyric = null
+      }
       newSong.getLyric().then((lyric) => {
         this.currentLyric = new Lyric(lyric, this.handleLyric)
-        setTimeout(() => {
+        clearTimeout(this.lyricTimer)
+        this.lyricTimer = setTimeout(() => {
           this.currentLyric.play()
         }, 1000)
       }).catch(() => {
@@ -395,6 +415,16 @@ export default {
       this.$refs.cd.style.opacity = `${opacity}`
       this.$refs.cd.style[transitionDuration] = `${time}ms`
       this.touch.percent = NaN
+    },
+    showPlaylist () {
+      this.$refs.playlist.show()
+    },
+    toggleLike () {
+      if (this.likeCls === 'icon-not-favorite') {
+        this.saveFavoriteList(this.currentSong)
+      } else if (this.likeCls === 'icon-favorite') {
+        this.deleteFavoriteList(this.currentSong)
+      }
     }
   },
   filters: {
@@ -402,18 +432,17 @@ export default {
       time = time | 0
       let minite = (time / 60 | 0).toString()
       let second = (time % 60 | 0).toString()
-      // minite = minite.length === 1 ? ('0' + minite) : minite
       second = second.length === 1 ? '0' + second : second
       return `${minite}:${second}`
     }
   },
   watch: {
     currentSong (newSong, oldSong) {
-      if (newSong.id === oldSong.id) {
+      if (!newSong.id) {
         return
       }
-      if (this.currentLyric) {
-        this.currentLyric.stop()
+      if (newSong.id === oldSong.id) {
+        return
       }
       this._getNewUrlAndPlay(newSong)
       this._getSongLyric(newSong)
@@ -430,13 +459,15 @@ export default {
   components: {
     ProcessBar,
     ProcessCircle,
-    Scroll
+    Scroll,
+    Playlist
   }
 }
 </script>
 
 <style lang="stylus" scoped>
   @import '~stylus/variable'
+  @import '~stylus/mixin'
   .player
     color $color-theme
     .player-full
@@ -472,15 +503,17 @@ export default {
           display inline-block
           font-size $font-size-large-x
           padding 0 15px
-          // background #000
           left 0
         .header-title
           display inline-block
           color white
+          no-wrap()
         .header-subtitle
-          margin -10px auto
+          width 90%
+          margin -20px auto
           font-size $font-size-medium
           color white
+          no-wrap()
       .body
         position fixed
         top 10%
@@ -586,6 +619,8 @@ export default {
             .i-right
               font-size 30px
               // background-color #fff
+            .icon-favorite
+              color $color-sub-theme
           .display
             color $color-text-d
       &.full-enter-active, &.full-leave-active
@@ -626,17 +661,19 @@ export default {
           &.pause
             animation-play-state paused
       .mini-body
+        overflow hidden
         flex 1
         padding 12px
-        // background-color yellow
         .mini-title
           margin 6px 0
           font-size $font-size-medium-x
           color white
+          no-wrap()
         .mini-subtitle
           margin 8px 0
           font-size $font-size-small
           color $color-text-d
+          no-wrap()
       .mini-right
         float right
         padding 0 10px

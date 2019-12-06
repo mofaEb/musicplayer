@@ -32,7 +32,7 @@
         :probe-type="probeType"
         @scroll="scroll"
       >
-        <div>
+        <div class="song-list-container">
           <song-list :isTopRank="isTopRank" :songs="songs" @select="selectItem"></song-list>
         </div>
         <div class="loading-container" v-show="!songs.length">
@@ -247,10 +247,13 @@ export default {
     position fixed
     top 0
     bottom 0
-    width 100%
+    left 5%
+    width 90%
     .song-list-scroll
       // overflow hidden
       height 100%
+      .song-list-container
+        padding-top 10px
     .loading-container
       position: absolute
       width: 100%

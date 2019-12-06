@@ -50,21 +50,23 @@ export default {
   @import '~stylus/variable'
   @import '~stylus/mixin'
   .list-outer
-    padding: 15px 0
     width 100%
     // background-color $color-background
     .list-inner
       display flex
-      width 90%
+      width 100%
       height 70px
       margin: 5px auto
       border-bottom: .3px solid $color-text-d
       .inner-song
-        width 80%
+        flex 1
+        overflow hidden
         .inner-titie
-          margin: 10px
+          color $color-text
+          margin-top 15px
+          no-wrap()
         .inner-desc
-          margin: 10px
+          margin-top: 10px
           color $color-text-d
           font-size $font-size-medium
           no-wrap()
@@ -78,7 +80,6 @@ export default {
         color $color-theme
         text-align center
         font-size $font-size-large-x
-        // background #000
         &.icon0
           bg-image('first')
         &.icon1

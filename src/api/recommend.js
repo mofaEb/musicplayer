@@ -1,16 +1,32 @@
-import jsonp from 'common/js/jsonp'
 import axios from 'axios'
-import { commonParams, options } from './config'
+import { commonParams } from './config'
 
 export function getRecommend () {
-  const url = 'https://c.y.qq.com/musichall/fcgi-bin/fcg_yqqhomepagerecommend.fcg'
+  const url = '/api/getSongData'
   const data = Object.assign({}, commonParams, {
-    platform: 'h5',
-    uin: 0,
-    needNewCode: 1
+    '-': 'recom05551762753745604',
+    loginUin: 0,
+    hostUin: 0,
+    format: 'json',
+    platform: 'yqq.json',
+    needNewCode: 0,
+    data: {
+      comm:{
+        ct:24
+      },
+      focus:{
+        module: 'QQMusic.MusichallServer',
+        method: 'GetFocus',
+        param: {}
+      }
+    }
   })
 
-  return jsonp(url, data, options)
+  return axios.get(url, {
+    params: data
+  }).then((res) => {
+    return Promise.resolve(res.data)
+  })
 }
 
 export function getDiscList() {
@@ -27,6 +43,41 @@ export function getDiscList() {
     rnd: Math.random(),
     format: 'json'
   })
+
+  return axios.get(url, {
+    params: data
+  }).then((res) => {
+    return Promise.resolve(res.data)
+  })
+}
+
+export function getRecommendList (mid) {
+  const url = '/api/getSongData'
+  const data = {
+    '-': 'albumSonglist19635885138270237',
+    loginUin: 0,
+    hostUin: 0,
+    format: 'json',
+    platform: 'yqq.json',
+    needNewCode: 0,
+    data: {
+      comm: {
+        ct: 24,
+        cv: 10000
+      },
+      albumSonglist: {
+        method: 'GetAlbumSongList',
+        param: {
+          albumMid: '000e8H6M2E2O8l',
+          albumID: 0,
+          begin: 0,
+          num: 10,
+          order: 2
+        },
+        module: 'music.musichallAlbum.AlbumSongList'
+      }
+    }
+  }
 
   return axios.get(url, {
     params: data

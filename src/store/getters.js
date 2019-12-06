@@ -4,6 +4,12 @@ export const disc = state => state.disc
 
 export const rank = state => state.rank
 
+export const searchHistory = state => state.searchHistory
+
+export const playHistory = state => state.playHistory
+
+export const favoriteList = state => state.favoriteList
+
 export const playing = state => state.playing
 
 export const fullScreen = state => state.fullScreen

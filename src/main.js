@@ -7,6 +7,9 @@ import VueLazyload from 'vue-lazyload'
 import 'stylus/index.styl'
 import 'common/fonts/iconfont.css'
 
+// import Vconsole from 'vconsole'
+// let vConsole = new Vconsole()
+// Vue.use(vConsole)
 
 FastClick.attach(document.body)
 Vue.config.productionTip = false

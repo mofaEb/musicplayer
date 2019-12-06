@@ -40,6 +40,7 @@ export default {
       this.$router.push({
         path: `/singer/${item.id}`
       })
+      console.log(item)
       this.setSinger(item)
     },
     _getSingerList () {

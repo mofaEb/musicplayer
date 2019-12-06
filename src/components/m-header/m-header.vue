@@ -2,6 +2,9 @@
   <div class="m-header">
     <div class="icon"></div>
     <div class="text">Chicken Music</div>
+    <router-link to="/user" tag="div" class="user">
+      <i class="icon-mine"></i>
+    </router-link>
   </div>
 </template>
 
@@ -19,7 +22,7 @@ export default {
     // position: relative
     height: 44px
     text-align: center
-    // font-size: 0
+    color: $color-theme
     .icon
       display: inline-block
       // position: absolute
@@ -35,5 +38,9 @@ export default {
       vertical-align: top
       line-height: 44px
       font-size: $font-size-large
-      color: $color-theme
+    .user
+      position absolute
+      top 10px
+      right 10px
+      font-size $font-size-large-x
 </style>
