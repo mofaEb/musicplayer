@@ -25,6 +25,11 @@ npm run serve
 ![page-singer-detail](./static-readme/page-singer-detail.png)
 
 ---
+### 歌手页面
+![page-player-home](./static-readme/page-player-home.png)
+![page-player-lyric](./static-readme/page-player-lyric.png)
+
+---
 ### 排行页面
 
 ![page-rank](./static-readme/page-rank.png)
