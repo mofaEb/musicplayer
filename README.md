@@ -33,7 +33,7 @@ npm run serve
 ---
 ### 搜索页面
 
-![page-search](./static-readme/page-singer.png)
+![page-search](./static-readme/page-search.png)
 ![page-search-sugguest](./static-readme/page-search-sugguest.png)
 
 ---
